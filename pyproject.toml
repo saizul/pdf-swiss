@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-swiss"
+dynamic = ["version"]
+description = "Swiss-army PDF command line tool on pypdf: merge, split, rotate, extract, reorder, delete, watermark, page numbers, encrypt, decrypt, metadata, text extraction, images to PDF and compression."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Saizul Amin" }]
+keywords = ["pdf", "pypdf", "merge-pdf", "split-pdf", "watermark", "page-numbers", "encrypt-pdf", "pdf-metadata", "img2pdf", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pypdf[crypto]>=5.1,<8",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+compress = ["pikepdf>=8.0"]
+dev = ["pytest>=7.4", "ruff>=0.4"]
+
+[project.urls]
+Homepage = "https://github.com/saizul/pdf-swiss"
+Issues = "https://github.com/saizul/pdf-swiss/issues"
+Changelog = "https://github.com/saizul/pdf-swiss/blob/main/CHANGELOG.md"
+
+[project.scripts]
+pdf-swiss = "pdf_swiss.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "pdf_swiss._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pdf_swiss = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM", "RUF"]
+ignore = ["SIM108", "RUF022", "RUF001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

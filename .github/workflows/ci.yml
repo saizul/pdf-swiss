@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Ruff
+        run: |
+          ruff check .
+          ruff format --check .
+
+  test:
+    name: Python ${{ matrix.python-version }}${{ matrix.extras == 'compress' && ' + pikepdf' || '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+        extras: ["dev"]
+        include:
+          - python-version: "3.12"
+            extras: "compress"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,${{ matrix.extras }}]"
+      - name: Test
+        run: pytest
+      - name: CLI smoke test
+        run: |
+          pdf-swiss --version
+          python - <<'PY'
+          from PIL import Image
+          Image.new("RGB", (300, 200), (30, 120, 200)).save("smoke.png")
+          PY
+          pdf-swiss img2pdf smoke.png smoke.png --page-size a4 -o smoke.pdf
+          pdf-swiss number smoke.pdf --format "{n} / {total}" -o smoke.pdf
+          pdf-swiss watermark smoke.pdf --text DRAFT -o smoke.pdf
+          pdf-swiss compress smoke.pdf -o smoke-small.pdf
+          pdf-swiss info smoke-small.pdf
+
+  docker:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t pdf-swiss:ci .
+      - run: docker run --rm pdf-swiss:ci --version
+      - name: Run a command in the container
+        run: |
+          mkdir -p "$RUNNER_TEMP/work" && chmod 777 "$RUNNER_TEMP/work"
+          python3 -c "from base64 import b64decode; open('$RUNNER_TEMP/work/dot.png','wb').write(b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='))"
+          docker run --rm -v "$RUNNER_TEMP/work:/work" pdf-swiss:ci img2pdf dot.png -o dot.pdf
+          docker run --rm -v "$RUNNER_TEMP/work:/work" pdf-swiss:ci compress dot.pdf -o dot-small.pdf
+          docker run --rm -v "$RUNNER_TEMP/work:/work" pdf-swiss:ci info dot-small.pdf

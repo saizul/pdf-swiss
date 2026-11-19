@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a new command, option or output format
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do with your PDFs?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed command line
+      placeholder: "pdf-swiss crop in.pdf --margins 20 -o out.pdf"
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to implement this

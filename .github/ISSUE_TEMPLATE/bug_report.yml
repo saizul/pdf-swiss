@@ -1,0 +1,40 @@
+name: Bug report
+description: pdf-swiss crashed, produced a broken PDF or did not do what the docs say
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach confidential PDFs or real passwords.** If the problem only happens with
+        one file, try to reproduce it with a file you can share (or describe how it was made).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: The command you ran and the full output or traceback.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: About the input file
+      description: "Output of: pdf-swiss info file.pdf (remove private metadata), and the program that created it."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Output of: pdf-swiss --version, and pip show pypdf pikepdf | grep Version"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "pip install on Windows 11, Python 3.12 / Docker image on Ubuntu 24.04"
