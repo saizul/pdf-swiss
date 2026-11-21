@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `blank` command and `ops.insert_blank()`: insert blank pages `--after` or `--before`
+  selected pages, `--every N` pages (never after the last page), and/or `--pad-to N` to make
+  the page count a multiple of N; `-n/--count` blanks per insertion. Blank pages copy the
+  size and rotation of their neighbour, and document metadata is kept.
+
 ## [0.1.0] - 2026-11-19
 
 ### Added

@@ -203,6 +203,60 @@ def split_names(stem: str, groups: Sequence[Sequence[int]], pattern: str) -> lis
     return names
 
 
+# --------------------------------------------------------------------------- blank pages
+
+
+def insert_blank(
+    reader: PdfReader,
+    *,
+    after: str | None = None,
+    before: str | None = None,
+    every: int | None = None,
+    pad_to: int | None = None,
+    count: int = 1,
+) -> PdfWriter:
+    """Insert blank pages: after or before the pages of a spec, after every N pages (not after
+    the last page), and/or at the end until the page count is a multiple of ``pad_to``.
+
+    Each blank page gets ``count`` copies and the size and rotation of its neighbour: the
+    page before it, or the first page when it is inserted at the very start.
+    """
+    if after is None and before is None and every is None and pad_to is None:
+        raise PdfSwissError("give --after, --before, --every or --pad-to")
+    if every is not None and (after is not None or before is not None):
+        raise PdfSwissError("--every cannot be combined with --after or --before")
+    for name, value in (("--every", every), ("--pad-to", pad_to), ("--count", count)):
+        if value is not None and value < 1:
+            raise PdfSwissError(f"{name} must be at least 1")
+    total = len(reader.pages)
+    blanks_after: Counter[int] = Counter()  # page index -> blanks after it; -1 means before the first page
+    for i in _pages(reader, after) if after is not None else ():
+        blanks_after[i] += count
+    for i in _pages(reader, before) if before is not None else ():
+        blanks_after[i - 1] += count
+    if every is not None:
+        for i in range(every - 1, total - 1, every):
+            blanks_after[i] += count
+
+    writer = PdfWriter()
+
+    def add_blanks(n: int, like) -> None:
+        width, height = float(like.mediabox.width), float(like.mediabox.height)
+        for _ in range(n):
+            blank = writer.add_blank_page(width=width, height=height)
+            if like.rotation:
+                blank[NameObject("/Rotate")] = NumberObject(like.rotation % 360)
+
+    add_blanks(blanks_after[-1], reader.pages[0])
+    for i, page in enumerate(reader.pages):
+        writer.add_page(page)
+        add_blanks(blanks_after[i], page)
+    if pad_to is not None and len(writer.pages) % pad_to:
+        add_blanks(pad_to - len(writer.pages) % pad_to, reader.pages[-1])
+    _copy_info(reader, writer)
+    return writer
+
+
 # --------------------------------------------------------------------------- rotate
 
 

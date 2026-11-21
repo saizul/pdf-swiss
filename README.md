@@ -8,7 +8,7 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **One small command for everyday PDF jobs.** Merge, split, rotate, extract, delete and reorder
-pages, stamp text or image watermarks, add page numbers, encrypt and decrypt, view, edit or
+pages, insert blank pages, stamp text or image watermarks, add page numbers, encrypt and decrypt, view, edit or
 strip metadata, extract text, turn images into a PDF and make files smaller. Pure Python on
 [pypdf](https://github.com/py-pdf/pypdf) and Pillow: no Ghostscript, no Java, no upload to a
 website.
@@ -81,6 +81,7 @@ are numbered from 1.
 | `extract IN -p PAGES -o OUT` | Keep only these pages, in this order |
 | `delete IN -p PAGES -o OUT` | Remove pages |
 | `reorder IN (--order SPEC \| --reverse) -o OUT` | New page order |
+| `blank IN (--after P \| --before P \| --every N \| --pad-to N) -o OUT` | Insert blank pages the size of their neighbour; `-n` blanks per insertion. `--every 1` backs every page for duplex printing, `--pad-to 2` (or `4` for booklets) evens out the page count |
 | `rotate IN [-a 90] [-p PAGES] -o OUT` | Rotate clockwise by 90, 180, 270 or -90 degrees |
 | `watermark IN (--text T \| --image IMG) -o OUT` | Stamp text or an image; `--position`, `--opacity`, `--size`, `--angle`, `--color`, `--scale`, `--under`, `-p` |
 | `number IN -o OUT` | Page numbers; `--format "Page {n} of {total}"`, `--start`, `--position`, `--size`, `--margin`, `--color`, `-p 2-end` to skip a cover |
@@ -139,6 +140,12 @@ pdf-swiss extract contract.pdf -p 1-3,end -o summary.pdf
 # Fix a duplex scan where the back sides came out upside down
 pdf-swiss rotate scan.pdf -a 180 -p even -o scan.pdf
 
+# Print a single-sided document on a duplex printer: a blank back for every page
+pdf-swiss blank handout.pdf --every 1 --pad-to 2 -o handout-duplex.pdf
+
+# Make chapters 2 and 3 (pages 12 and 30) start on a right-hand page
+pdf-swiss blank book.pdf --before 12,30 -o book-print.pdf
+
 # Logo watermark under the content, bottom right, 15% of the page width
 pdf-swiss watermark slides.pdf --image logo.png --position bottom-right --scale 0.15 --opacity 1 --under -o slides.pdf
 
@@ -181,8 +188,8 @@ steep option lists, and online tools upload your documents. pdf-swiss covers the
 with one consistent syntax, installs with pip on Windows, macOS and Linux, and doubles as a
 Python library.
 
-**Does `merge` keep bookmarks, links and forms?** `merge`, `split`, `extract`, `delete` and
-`reorder` copy pages, so links between pages and the original outline are not carried over
+**Does `merge` keep bookmarks, links and forms?** `merge`, `split`, `extract`, `delete`,
+`reorder` and `blank` copy pages, so links between pages and the original outline are not carried over
 (use `merge --bookmarks` for one bookmark per file). Commands that change a whole document
 (`rotate`, `watermark`, `number`, `encrypt`, `decrypt`, `meta`, `compress`) keep everything.
 
@@ -207,7 +214,6 @@ are already compressed or mostly images. Try `--image-quality 60` and `--max-ima
 Ideas marked "good first issue" are described in [CONTRIBUTING.md](CONTRIBUTING.md#good-first-issues).
 
 - [ ] `crop` by margins (good first issue)
-- [ ] `blank` pages for duplex printing (good first issue)
 - [ ] Extract embedded images (good first issue)
 - [ ] List bookmarks (good first issue)
 - [ ] `nup`: 2 or 4 pages per sheet (good first issue)

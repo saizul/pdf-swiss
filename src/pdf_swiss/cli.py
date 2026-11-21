@@ -105,6 +105,15 @@ def cmd_reorder(args):
     return _done(args, writer, "reordered")
 
 
+def cmd_blank(args):
+    reader = _open(args)
+    writer = ops.insert_blank(
+        reader, after=args.after, before=args.before, every=args.every, pad_to=args.pad_to, count=args.count
+    )
+    added = len(writer.pages) - len(reader.pages)
+    return _done(args, writer, f"added {added} blank page{'s' * (added != 1)}")
+
+
 def cmd_rotate(args):
     return _done(args, ops.rotate(_open(args), args.angle, args.pages), f"rotated by {args.angle}")
 
@@ -285,7 +294,7 @@ def cmd_info(args):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pdf-swiss",
-        description="Swiss-army knife for PDF files: merge, split, rotate, extract, reorder, watermark, "
+        description="Swiss-army knife for PDF files: merge, split, rotate, extract, reorder, blank pages, watermark, "
         "number, encrypt, decrypt, metadata, text, images to PDF and compression.",
     )
     parser.add_argument("--version", action="version", version=f"pdf-swiss {__version__}")
@@ -331,6 +340,15 @@ def build_parser() -> argparse.ArgumentParser:
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--order", help='new order, e.g. "3,1,2,4-end"')
     g.add_argument("--reverse", action="store_true", help="reverse the page order")
+    _add_output(p)
+    _add_password(p)
+
+    p = add("blank", cmd_blank, "Insert blank pages, e.g. for duplex printing or chapters that start on the right")
+    p.add_argument("--after", metavar="PAGES", help='insert after these pages, e.g. "3,7" or "odd"')
+    p.add_argument("--before", metavar="PAGES", help='insert before these pages, e.g. "1" for a blank first page')
+    p.add_argument("--every", type=int, metavar="N", help="insert after every N pages (never after the last page)")
+    p.add_argument("--pad-to", type=int, metavar="N", help="append blank pages until the page count is a multiple of N")
+    p.add_argument("-n", "--count", type=int, default=1, help="blank pages per insertion (default 1)")
     _add_output(p)
     _add_password(p)
 

@@ -28,17 +28,15 @@ Each of these is self-contained and touches `ops.py`, `cli.py` and the tests.
 
 1. **`crop`**: set the crop box from margins in points or millimetres
    (`--margins 20` or `--margins 10mm,15mm`), for selected pages.
-2. **`blank`**: insert blank pages (`--after 3`, `--every 2` for duplex printing), the size of
-   the neighbouring page.
-3. **`images` (extract)**: save every embedded image to a folder with `page.images`
+2. **`images` (extract)**: save every embedded image to a folder with `page.images`
    (`{stem}-p{page}-{n}.{ext}`).
-4. **`bookmarks`**: list the outline as an indented tree, and `--json`.
-5. **`nup`**: put 2 or 4 pages on one sheet with `merge_transformed_page` (scale + translate).
-6. **Font choice for stamps**: add Times-Roman and Courier (their AFM widths) to
+3. **`bookmarks`**: list the outline as an indented tree, and `--json`.
+4. **`nup`**: put 2 or 4 pages on one sheet with `merge_transformed_page` (scale + translate).
+5. **Font choice for stamps**: add Times-Roman and Courier (their AFM widths) to
    `draw.FONTS` and a `--font` option for `watermark` and `number`.
-7. **`--dry-run` for `split`**: print the file names and page ranges without writing.
-8. **`attach`**: embed files into a PDF with `writer.add_attachment` and list them in `info`.
-9. **Roman numerals** for `number`: a `{n:roman}` style placeholder for front matter.
+6. **`--dry-run` for `split`**: print the file names and page ranges without writing.
+7. **`attach`**: embed files into a PDF with `writer.add_attachment` and list them in `info`.
+8. **Roman numerals** for `number`: a `{n:roman}` style placeholder for front matter.
 
 ## Development setup
 
