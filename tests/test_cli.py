@@ -147,3 +147,15 @@ def test_errors_exit_1(tmp_path, capsys, pdf3):
 def test_quiet(tmp_path, capsys, pdf3):
     code, _, err = run(capsys, "-q", "rotate", pdf3, "-o", tmp_path / "r.pdf")
     assert code == 0 and err == ""
+
+
+def test_blank(tmp_path, capsys, pdf3):
+    out = tmp_path / "duplex.pdf"
+    code, _, err = run(capsys, "blank", pdf3, "--every", "1", "--pad-to", "2", "-o", out)
+    assert code == 0
+    assert "added 3 blank pages" in err and "6 pages" in err
+    assert page_texts(out) == ["Page 1", "", "Page 2", "", "Page 3", ""]
+    code, _, err = run(capsys, "blank", pdf3, "--before", "1", "-n", "1", "-o", out)
+    assert code == 0 and "added 1 blank page:" in err
+    code, _, err = run(capsys, "blank", pdf3, "-o", out)
+    assert code != 0 and "give --after" in err

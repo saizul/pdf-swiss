@@ -352,3 +352,48 @@ def test_text_helpers():
     assert draw.pdf_string(b"a(b)\\c\n") == b"(a\\(b\\)\\\\c\\012)"
     assert draw.encode_text("café €") == b"caf\xe9 \x80"
     assert draw.encode_text("日本") == b"??"
+
+
+def test_insert_blank_every_and_pad(pdf3):
+    reader = PdfReader(str(pdf3))
+    assert texts(roundtrip(ops.insert_blank(reader, every=1))) == ["Page 1", "", "Page 2", "", "Page 3"]
+    assert texts(roundtrip(ops.insert_blank(reader, every=2))) == ["Page 1", "Page 2", "", "Page 3"]
+    assert texts(roundtrip(ops.insert_blank(reader, pad_to=4))) == ["Page 1", "Page 2", "Page 3", ""]
+    assert len(roundtrip(ops.insert_blank(reader, pad_to=3)).pages) == 3
+    both = roundtrip(ops.insert_blank(reader, every=1, pad_to=2))
+    assert texts(both) == ["Page 1", "", "Page 2", "", "Page 3", ""]
+
+
+def test_insert_blank_after_before_and_count(pdf3):
+    reader = PdfReader(str(pdf3))
+    r = roundtrip(ops.insert_blank(reader, after="2", before="1", count=2))
+    assert texts(r) == ["", "", "Page 1", "Page 2", "", "", "Page 3"]
+    r = roundtrip(ops.insert_blank(reader, after="end", before="3"))
+    assert texts(r) == ["Page 1", "Page 2", "", "Page 3", ""]
+    r = roundtrip(ops.insert_blank(reader, after="odd"))
+    assert texts(r) == ["Page 1", "", "Page 2", "Page 3", ""]
+
+
+def test_insert_blank_copies_neighbour_size_and_rotation(tmp_path):
+    a4 = make_pdf(tmp_path / "a4.pdf", 1, size=(595.28, 841.89))
+    wide = make_pdf(tmp_path / "wide.pdf", 1, size=(800, 400))
+    merged = tmp_path / "mixed.pdf"
+    ops.save(ops.rotate(PdfReader(str(ops.save(ops.merge([str(a4), str(wide)]), merged))), 90, "2"), merged)
+    r = roundtrip(ops.insert_blank(PdfReader(str(merged)), before="1", after="all"))
+    sizes = [(round(float(p.mediabox.width)), round(float(p.mediabox.height)), p.rotation) for p in r.pages]
+    assert sizes == [(595, 842, 0), (595, 842, 0), (595, 842, 0), (800, 400, 90), (800, 400, 90)]
+
+
+def test_insert_blank_keeps_metadata_and_validates(tmp_path):
+    src = make_pdf(tmp_path / "m.pdf", 2, metadata={"/Title": "Report"})
+    reader = PdfReader(str(src))
+    assert roundtrip(ops.insert_blank(reader, every=1)).metadata["/Title"] == "Report"
+    with pytest.raises(ops.PdfSwissError, match="give --after"):
+        ops.insert_blank(reader)
+    with pytest.raises(ops.PdfSwissError, match="cannot be combined"):
+        ops.insert_blank(reader, every=1, after="1")
+    for kwargs in ({"every": 0}, {"pad_to": 0}, {"every": 1, "count": 0}):
+        with pytest.raises(ops.PdfSwissError, match="at least 1"):
+            ops.insert_blank(reader, **kwargs)
+    with pytest.raises(ops.PdfSwissError, match="out of range"):
+        ops.insert_blank(reader, after="5")
